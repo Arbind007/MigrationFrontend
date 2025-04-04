@@ -10,12 +10,21 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const COLORS = ["#4CAF50", "#FF9800", "#F44336"];
 
 
-const idpOptions = [
+const sourceOptions = [
   { id: "select", name: "select", attributes: [] },
-  { id: "okta", name: "Okta", attributes: ["Username", "Email", "Groups"] },
-  { id: "auth0", name: "Auth0", attributes: ["User ID", "Email", "Roles"] },
-  { id: "azure", name: "Azure AD", attributes: ["UPN", "Display Name", "Groups"] },
+  { id: "ldap", name: "LDAP", attributes: ["Server Detail", "Protocol", "Port Number", "User ID", "Password", "BaseDN"] },
+  { id: "ad", name: "Active Directory", attributes: ["Server Detail", "Protocol", "Port Number", "User ID", "Password", "BaseDN"] },
+  { id: "db", name: "Database", attributes: ["Host", "Port", "User ID", "Password", "Database Name", "Table Name"] },
 ];
+
+const destinationOptions = [
+  { id: "select", name: "select", attributes: [] },
+  { id: "okta", name: "Okta", attributes: ["Okta Base URL", "API Security Token"] },
+  { id: "auth0", name: "Auth0", attributes: ["Auth0 Base URL", "API Token"] },
+  { id: "ping", name: "Ping", attributes: ["Ping Base URL","Access Token" ]},
+  { id: "forgeRock", name: "Forge ROCK", attributes: ["ForgeRock Instance URL", "Realm", "Access Token"] },
+];
+
 
 const Dashboard = () => {
   const [migrationData, setMigrationData] = useState({
@@ -31,30 +40,42 @@ const Dashboard = () => {
   const [logs, setLogs] = useState([]);
   const [inputValues, setInputValues] = useState({});
 
+  const [visibleButton, setVisibleButton] = useState(1); 
+
   useEffect(() => {
     const interval = setInterval(() => {
       setLogs((prevLogs) => [...prevLogs, `Checking migration status...`]);
-    }, 2000);
+    }, 20000);
     return () => clearInterval(interval);
   }, []);
 
   const handleSourceIdpChange = (value) => {
-    setSelectedSourceIdp(idpOptions.find((option) => option.id === value));
+    setSelectedSourceIdp(sourceOptions.find((option) => option.id === value));
   };
   
 
   const handleDestinationIdpChange = (value) => {
-    setSelectedDestinationIdp(idpOptions.find((option) => option.id === value));
+    setSelectedDestinationIdp(destinationOptions.find((option) => option.id === value));
   };
 
   const handleInputChange = (attribute, value) => {
     setInputValues({ ...inputValues, [attribute]: value });
   };
 
-  const handleImport = () => {
+  const handleNext = () => {
+    setVisibleButton(2);
     setLogs((prevLogs) => [...prevLogs, "Importing data from source to destination..."]);
   };
 
+  const handleReplicate = () => {
+    setVisibleButton(3);
+    setLogs((prevLogs) => [...prevLogs, "Importing data from source to destination..."]);
+  };
+
+  const handleMigrate = () => {
+    setVisibleButton(1);
+    setLogs((prevLogs) => [...prevLogs, "Stoping the Import dataprocess..."]);
+  };
   const handleAbortImport = () => {
     setLogs((prevLogs) => [...prevLogs, "Stoping the Import dataprocess..."]);
   };
@@ -74,17 +95,18 @@ const Dashboard = () => {
       <Card className="container-xl">
         
         <CardContent>
-          <h2 className="text-xl font-semibold mb-4">Select Source and Destination IDPs</h2>
-          <div className="row g-3">
+        {visibleButton === 1 && (
+          <h2 className="text-xl font-semibold mb-4">Select Source and Destination IDPs</h2>)}
+          {visibleButton === 1 && (<div className="row g-3">
             <div className="col-md-6">
-              <h3 className="text-lg font-semibold">Source IDP</h3>
+              <h3 className="text-lg font-semibold">Source</h3>
               <p></p>
-              <Select onValueChange={handleSourceIdpChange}>
+              <Select onValueChange={handleSourceIdpChange} className="form-select">
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select Source IDP" />
                 </SelectTrigger>
                 <SelectContent>
-                  {idpOptions.map((idp) => (
+                  {sourceOptions.map((idp) => (
                     <SelectItem key={idp.id} value={idp.id}>{idp.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -93,7 +115,7 @@ const Dashboard = () => {
               <p class="py-2"></p>
               {selectedSourceIdp && (
                 <div className="mt-6">
-                  <h4 className="text-lg font-semibold">Enter Source IDP Details</h4>
+                  <h4 className="text-lg font-semibold">Enter Source Details</h4>
                   <p></p>
                   {selectedSourceIdp.attributes.map((attr) => (
                     <p>
@@ -104,14 +126,14 @@ const Dashboard = () => {
               )}
             </div>
             <div className="col-md-6">
-              <h3 className="text-lg font-semibold">Destination IDP</h3>
+              <h3 className="text-lg font-semibold">Destination</h3>
               <p></p>
-              <Select onValueChange={handleDestinationIdpChange}>
+              <Select onValueChange={handleDestinationIdpChange} className="form-select">
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select Destination IDP" />
                 </SelectTrigger>
                 <SelectContent>
-                  {idpOptions.map((idp) => (
+                  {destinationOptions.map((idp) => (
                     <SelectItem key={idp.id} value={idp.id}>{idp.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -119,7 +141,7 @@ const Dashboard = () => {
               <p class="py-2"></p>
               {selectedDestinationIdp && (
                 <div className="">
-                  <h4 className="text-lg font-semibold">Enter Source IDP Details</h4>
+                  <h4 className="text-lg font-semibold">Enter Destination Details</h4>
                   <p></p>
                   {selectedDestinationIdp.attributes.map((attr) => (
                     <p>
@@ -129,9 +151,11 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div>)}
           <p class="py-1"></p>
-          <Button onClick={handleImport} className="my-2 btn btn-primary">Import</Button>
+          {visibleButton === 1 && (<Button onClick={handleNext} className="my-2 btn btn-primary">Next</Button>)}
+          {visibleButton === 2 && (<Button onClick={handleReplicate} className="my-2 btn btn-primary">Replicate Data</Button>)}
+          {visibleButton === 3 && (<Button onClick={handleMigrate} className="my-2 btn btn-primary">MigrateUser</Button>)}
           <p class="py-1"></p>
         </CardContent>
       </Card>
