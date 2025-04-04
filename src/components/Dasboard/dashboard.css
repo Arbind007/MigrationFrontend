@@ -1,0 +1,7 @@
+#customInput {
+    width: 100% !important; 
+    max-width: none !important;
+    min-width: 400px !important;
+    height: 50px !important;
+    color: brown;
+  }
