@@ -22,7 +22,7 @@ const destinationOptions = [
   { id: "okta", name: "Okta", attributes: ["Okta Base URL", "API Security Token"] },
   { id: "auth0", name: "Auth0", attributes: ["Auth0 Base URL", "API Token"] },
   { id: "ping", name: "Ping", attributes: ["Ping Base URL","Access Token" ]},
-  { id: "forgeRock", name: "Forge ROCK", attributes: ["ForgeRock Instance URL", "Realm", "Access Token"] },
+  { id: "forgeRock", name: "ForgeRock", attributes: ["ForgeRock Instance URL", "Realm", "Access Token"] },
 ];
 
 
