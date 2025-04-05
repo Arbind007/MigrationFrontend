@@ -11,8 +11,8 @@ const Progress = React.forwardRef(({ className, value, max = 100, ...props }, re
       className={`relative w-full  bg-gray-200 rounded-full overflow-hidden ${className || ""}`}
       {...props}
     >
-      <div class="progress">
-        <div class="progress-bar bg-success" role="progressbar" style={{width: `${(value / max) * 100}%`}} aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+      <div className="progress">
+        <div className="progress-bar bg-success" role="progressbar" style={{width: `${(value / max) * 100}%`}} aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
     </div>
   );

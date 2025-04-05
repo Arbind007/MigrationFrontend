@@ -3,14 +3,12 @@ import React from "react";
 
 export const Select = ({ onValueChange, children }) => {
   return (
-    <div className="relative">
       <select
         onChange={(e) => onValueChange(e.target.value)}
-        className="form-select form-select-xl w-50"
+        className="form-select form-select-xl w-full p-2 border rounded"
       >
         {children}
       </select>
-    </div>
   );
 };
 

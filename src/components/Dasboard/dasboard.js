@@ -5,7 +5,6 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer} from "recharts";
 import { Button } from "../ui/Button";
 import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from "../ui/Select";
 import { Input } from "../ui/Input";
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 const COLORS = ["#4CAF50", "#FF9800", "#F44336"];
 
@@ -35,11 +34,11 @@ const Dashboard = () => {
     errorLogs: []
   });
 
-  const [selectedSourceIdp, setSelectedSourceIdp] = useState(null);
-  const [selectedDestinationIdp, setSelectedDestinationIdp] = useState(null);
+  const [selectedSourceIdp, setSelectedSourceIdp] = useState(sourceOptions[0]);
+  const [selectedDestinationIdp, setSelectedDestinationIdp] = useState(destinationOptions[0]);
   const [logs, setLogs] = useState([]);
-  const [inputValues, setInputValues] = useState({});
-
+  const [sourceInputValues, setSourceInputValues] = useState({});
+  const [destinationInputValues, setDestinationInputValues] = useState({});
   const [visibleButton, setVisibleButton] = useState(1); 
 
   useEffect(() => {
@@ -50,31 +49,72 @@ const Dashboard = () => {
   }, []);
 
   const handleSourceIdpChange = (value) => {
-    setSelectedSourceIdp(sourceOptions.find((option) => option.id === value));
+    const selected = sourceOptions.find((option) => option.id === value);
+    setSelectedSourceIdp(selected);
+    console.log("Selected Source ID:", selected.id);
+    setSourceInputValues({});
   };
   
 
   const handleDestinationIdpChange = (value) => {
-    setSelectedDestinationIdp(destinationOptions.find((option) => option.id === value));
+    const selectedDestination = destinationOptions.find((option) => option.id === value);
+    setSelectedDestinationIdp(selectedDestination);
+    console.log("Selected Destination ID:", selectedDestination.id);
+    setDestinationInputValues({});
   };
 
-  const handleInputChange = (attribute, value) => {
-    setInputValues({ ...inputValues, [attribute]: value });
+  const handleSourceInputChange = (attribute, value) => {
+    setSourceInputValues({ ...sourceInputValues, [attribute]: value });
+  };
+
+  const handleDestinationInputChange = (attribute, value) => {
+    setDestinationInputValues({ ...destinationInputValues, [attribute]: value });
   };
 
   const handleNext = () => {
-    setVisibleButton(2);
-    setLogs((prevLogs) => [...prevLogs, "Importing data from source to destination..."]);
+    if(selectedSourceIdp?.id !== "select"){
+      const sourceAttrs = selectedSourceIdp?.attributes || [];
+      const destAttrs = selectedDestinationIdp?.attributes || [];
+  
+      console.log(selectedSourceIdp);
+      console.log(selectedDestinationIdp);
+  
+      const missingSourceFields = sourceAttrs.filter(
+        attr => !sourceInputValues[attr]?.trim()
+      );
+    
+      const missingDestinationFields = destAttrs.filter(
+        attr => !destinationInputValues[attr]?.trim()
+      );
+  
+      const allMissingFields = [...missingSourceFields, ...missingDestinationFields];
+  
+      if (allMissingFields.length > 0) {
+        alert(`Please fill all required fields: ${allMissingFields.join(", ")}`);
+        return;
+      } 
+      setVisibleButton(2);
+      console.log(sourceInputValues);
+      console.log(destinationInputValues);
+      setLogs((prevLogs) => [...prevLogs, "Importing data from source to destination..."]);
+    }
+    else{
+      alert(`Please select a valid source and destination option`);
+    }
+
+    // resetting the source and destination options
+    setSelectedSourceIdp(sourceOptions[0]);
+    setSelectedDestinationIdp(destinationOptions[0]);
   };
 
   const handleReplicate = () => {
     setVisibleButton(3);
-    setLogs((prevLogs) => [...prevLogs, "Importing data from source to destination..."]);
+    setLogs((prevLogs) => [...prevLogs, "Replicating data from source to destination..."]);
   };
 
   const handleMigrate = () => {
     setVisibleButton(1);
-    setLogs((prevLogs) => [...prevLogs, "Stoping the Import dataprocess..."]);
+    setLogs((prevLogs) => [...prevLogs, "Migrating the Import dataprocess..."]);
   };
   const handleAbortImport = () => {
     setLogs((prevLogs) => [...prevLogs, "Stoping the Import dataprocess..."]);
@@ -90,16 +130,17 @@ const Dashboard = () => {
     
     <div className="bg-primary">
       
-      <p class="py-3 bg-primary">
+      <p className="py-3 bg-primary">
       </p>
       <Card className="container-xl">
         
         <CardContent>
         {visibleButton === 1 && (
-          <h2 className="text-xl font-semibold mb-4">Select Source and Destination IDPs</h2>)}
+          <h2 className="text-xl font-semibold mb-4">Select Source and Destination IDPs</h2>
+        )}
           {visibleButton === 1 && (<div className="row g-3">
             <div className="col-md-6">
-              <h3 className="text-lg font-semibold">Source</h3>
+              <h3 className="text-lg font-semibold">Select Source</h3>
               <p></p>
               <Select onValueChange={handleSourceIdpChange} className="form-select">
                 <SelectTrigger className="w-full">
@@ -112,14 +153,15 @@ const Dashboard = () => {
                 </SelectContent>
               </Select>
 
-              <p class="py-2"></p>
+              <p className="py-2"></p>
               {selectedSourceIdp && (
                 <div className="mt-6">
-                  <h4 className="text-lg font-semibold">Enter Source Details</h4>
+                  {selectedSourceIdp?.id !== "select" && (<h4 className="text-lg font-semibold">Enter Source Details</h4>)}
+                  {/* <h4 className="text-lg font-semibold">Enter Source Details</h4> */}
                   <p></p>
                   {selectedSourceIdp.attributes.map((attr) => (
                     <p>
-                    <Input id="customInput" key={attr} placeholder={attr} className="mt-4" onChange={(e) => handleInputChange(attr, e.target.value)} />
+                    <Input id="customInput" key={attr} placeholder={attr} className="mt-4" onChange={(e) => handleSourceInputChange(attr, e.target.value)} />
                     </p>
                   ))}
                 </div>
@@ -138,29 +180,30 @@ const Dashboard = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p class="py-2"></p>
+              <p className="py-2"></p>
               {selectedDestinationIdp && (
                 <div className="">
-                  <h4 className="text-lg font-semibold">Enter Destination Details</h4>
+                  {selectedDestinationIdp?.id !== "select" && (<h4 className="text-lg font-semibold">Enter Destination Details</h4>)}
+                  {/* <h4 className="text-lg font-semibold">Enter Destination Details</h4> */}
                   <p></p>
                   {selectedDestinationIdp.attributes.map((attr) => (
                     <p>
-                    <Input key={attr} placeholder={attr} className="form-control form-control-lg" onChange={(e) => handleInputChange(attr, e.target.value)} />
+                    <Input key={attr} placeholder={attr} className="mt-4" onChange={(e) => handleDestinationInputChange(attr, e.target.value)} />
                     </p>
                   ))}
                 </div>
               )}
             </div>
           </div>)}
-          <p class="py-1"></p>
+          <p className="py-1"></p>
           {visibleButton === 1 && (<Button onClick={handleNext} className="my-2 btn btn-primary">Next</Button>)}
           {visibleButton === 2 && (<Button onClick={handleReplicate} className="my-2 btn btn-primary">Replicate Data</Button>)}
           {visibleButton === 3 && (<Button onClick={handleMigrate} className="my-2 btn btn-primary">MigrateUser</Button>)}
-          <p class="py-1"></p>
+          <p className="py-1"></p>
         </CardContent>
       </Card>
 
-      <p class="py-3 bg-primary">
+      <p className="py-3 bg-primary">
       </p>
       <div className="container-xl">
       <div className="row">
@@ -168,12 +211,12 @@ const Dashboard = () => {
         <CardContent>
           <h2 className="text-xl font-semibold">Migration Progress</h2>
           <Progress value={(migrationData.migratedUsers / migrationData.totalUsers) * 100} className="mt-4" />
-          <div class="spinner-border m-5" role="status">
-            <span class="visually-hidden">Loading...</span>
+          <div className="spinner-border m-5" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
           <p></p>
-          <div class="clearfix">
-            <div class="float-end">
+          <div className="clearfix">
+            <div className="float-end">
             <Button type="button" className="btn btn-danger" onClick={handleAbortImport}>Stop Migration</Button>
             </div>
           </div>
@@ -198,14 +241,14 @@ const Dashboard = () => {
       </div>
       </div>
 
-      <p class="py-3 bg-primary">
+      <p className="py-3 bg-primary">
       </p>
       {/* Error logs */}
 
       <Card className="container">
         <CardContent>
           <h2 className="text-xl font-semibold">Error Logs</h2>
-          <p class="py-1"></p>
+          <p className="py-1"></p>
           <div className="mt-2 bg-black text-success p-4 h-40 overflow-y-auto font-mono">
             {logs.map((log, index) => (
               <div key={index} className="animate-pulse">{log}</div>
@@ -213,9 +256,9 @@ const Dashboard = () => {
             <span className="cursor">|</span>
           </div>
         </CardContent>
-        <p class="py-1 "></p>
+        <p className="py-1 "></p>
       </Card>
-      <p class="py-4 bg-primary"></p>
+      <p className="py-4 bg-primary"></p>
     </div>
   );
 };
